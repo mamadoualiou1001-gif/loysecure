@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Détail du locataire" %} - {{ tenant.name }} - LoySecure{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">{{ tenant.name }}</h2>
+                    <div>
+                        {% if tenant.is_active %}
+                            <span class="badge bg-success">{% trans "Actif" %}</span>
+                        {% else %}
+                            <span class="badge bg-danger">{% trans "Inactif" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>{% trans "Téléphone" %}:</strong> {{ tenant.phone }}</p>
+                            <p><strong>{% trans "Email" %}:</strong> {{ tenant.email|default:"-" }}</p>
+                            <p><strong>{% trans "Logement" %}:</strong> {{ tenant.property_ref.address }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>{% trans "Montant du loyer" %}:</strong> {{ tenant.rent_amount }} {{ tenant.property_ref.owner.get_currency_symbol }}</p>
+                            <p><strong>{% trans "Début du contrat" %}:</strong> {{ tenant.contract_start_date|date:"d/m/Y"|default:"-" }}</p>
+                            <p><strong>{% trans "Fin du contrat" %}:</strong> {{ tenant.contract_end_date|date:"d/m/Y"|default:"-" }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if tenant.notes %}
+                    <div class="mt-3">
+                        <strong>{% trans "Notes" %}:</strong>
+                        <p class="mt-2">{{ tenant.notes|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <h5>{% trans "Historique des quittances" %}</h5>
+                        {% if tenant.receipts.all %}
+                            <table class="table table-sm table-striped mt-2">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>{% trans "Mois" %}</th>
+                                        <th>{% trans "Montant" %}</th>
+                                        <th>{% trans "Date" %}</th>
+                                        <th>{% trans "PDF" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for receipt in tenant.receipts.all %}
+                                    <tr>
+                                        <td>{{ receipt.month|date:"F Y" }}</td>
+                                        <td>{{ receipt.amount }} {{ receipt.owner.get_currency_symbol }}</td>
+                                        <td>{{ receipt.certified_at|date:"d/m/Y" }}</td>
+                                        <td>
+                                            {% if receipt.pdf_file %}
+                                                <a href="{% url 'receipts:download' receipt.id %}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p class="text-muted">{% trans "Aucune quittance générée pour ce locataire." %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'tenants:tenant_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> {% trans "Retour à la liste" %}
+                        </a>
+                        <a href="{% url 'tenants:tenant_edit' tenant.id %}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> {% trans "Modifier" %}
+                        </a>
+                        <a href="{% url 'receipts:create' tenant.id %}" class="btn btn-success">
+                            <i class="fas fa-file-invoice"></i> {% trans "Générer quittance" %}
+                        </a>
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="fas fa-trash"></i> {% trans "Supprimer" %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">{% trans "Confirmation de suppression" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{% trans "Êtes-vous sûr de vouloir supprimer ce locataire ?" %}</p>
+                <p class="fw-bold">{{ tenant.name }}</p>
+                <p class="text-danger">{% trans "Cette action est irréversible." %}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Annuler" %}</button>
+                <form method="post" action="{% url 'tenants:tenant_delete' tenant.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">{% trans "Confirmer la suppression" %}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card card-shadow border-0">
+            <div class="card-body text-center">
+                <i class="fas fa-user-circle fa-4x text-primary mb-3"></i>
+                <h4>{{ user.username }}</h4>
+                <p class="text-muted">{{ user.email }}</p>
+                <a href="{% url 'accounts:edit_profile' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-edit me-1"></i> {% trans "Modifier" %}
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card card-shadow border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>{% trans "Mes informations" %}</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr><th style="width: 40%">{% trans "Téléphone" %}</th><td>{{ user.phone }}</td></tr>
+                    <tr><th>{% trans "Devise" %}</th><td>{{ user.get_currency_display }}</td></tr>
+                    <tr><th>{% trans "Entreprise" %}</th><td>{{ user.company_name|default:"-" }}</td></tr>
+                    <tr><th>{% trans "Adresse" %}</th><td>{{ user.address|default:"-"|linebreaks }}</td></tr>
+                    <tr><th>{% trans "Date d'inscription" %}</th><td>{{ user.created_at|date:"d/m/Y" }}</td></tr>
+                    <tr><th>{% trans "Chambres déclarées" %}</th><td><strong>{{ user.total_rooms_declared }}</strong></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

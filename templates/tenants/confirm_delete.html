@@ -1,0 +1,36 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Supprimer le locataire" %} - LoySecure{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="mb-0">{% trans "Confirmation de suppression" %}</h2>
+                </div>
+                <div class="card-body">
+                    <p>{% trans "Êtes-vous sûr de vouloir supprimer le locataire" %} :</p>
+                    <p class="fw-bold">{{ tenant.name }} - {{ tenant.property_ref.address }}</p>
+                    <p class="text-danger">{% trans "Cette action est irréversible." %}</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                            <a href="{% url 'tenants:tenant_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> {% trans "Annuler" %}
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> {% trans "Confirmer la suppression" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

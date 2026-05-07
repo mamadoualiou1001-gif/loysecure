@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        
+        <!-- Informations actuelles -->
+        <div class="card card-shadow border-0 mb-4">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h3 class="mb-0"><i class="fas fa-credit-card me-2"></i>{% trans "Mon abonnement" %}</h3>
+            </div>
+            <div class="card-body p-4">
+                
+                {% if subscription_type == 'free_trial' %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-gift me-2"></i>
+                        <strong>{% trans "Période d'essai gratuite" %}</strong><br>
+                        {% trans "Quittances utilisées :" %} {{ free_trial_used }}/10
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>{% trans "Choisissez votre formule" %}</strong><br>
+                        {% trans "Après l'essai, vous pouvez continuer avec Pay-per-use ou Abonnement." %}
+                    </div>
+                    
+                {% elif subscription_type == 'subscription' %}
+                    
+                    {% if subscription_status and subscription_status.is_free %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-gift me-2"></i>
+                            <strong>{% trans "Mois gratuit !" %}</strong><br>
+                            {% if subscription_status.free_reason == 'premier_mois' %}
+                                {% trans "C'est votre premier mois d'abonnement, il est totalement gratuit (offre de bienvenue)." %}
+                            {% elif subscription_status.free_reason == 'mois_offert' %}
+                                {% trans "Félicitations ! Vous avez payé 5 mois consécutifs, ce mois vous est offert." %}
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    
+                    {% if subscription_active %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>{% trans "Abonnement actif" %}</strong><br>
+                            {% trans "Valable jusqu'au :" %} {{ subscription_end_date|date:"d/m/Y" }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>{% trans "Abonnement inactif" %}</strong><br>
+                            {% trans "Activez votre abonnement pour commencer à générer des quittances." %}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Suivi de l'offre (première année) -->
+                    {% if not first_year_complete %}
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <h6><i class="fas fa-chart-line me-2"></i>{% trans "Suivi de votre offre promotionnelle" %}</h6>
+                                <p class="mb-1">{% trans "Mois payés consécutifs :" %} 
+                                    <strong>{{ subscription_status.consecutive_paid_months|default:0 }}/5</strong>
+                                </p>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-success" style="width: {% widthratio subscription_status.consecutive_paid_months|default:0 5 100 %}%"></div>
+                                </div>
+                                
+                                {% if subscription_status and not subscription_status.free_month_used %}
+                                    {% if subscription_status.next_free_month_in %}
+                                        <p class="small text-muted">
+                                            <i class="fas fa-gift me-1"></i>
+                                            {% blocktrans with months=subscription_status.next_free_month_in %}
+                                            Plus que {{ months }} mois payés pour obtenir 1 mois gratuit !
+                                            {% endblocktrans %}
+                                        </p>
+                                    {% elif subscription_status.consecutive_paid_months >= 5 %}
+                                        <p class="small text-success">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            {% trans "Vous avez droit à un mois gratuit ! Le prochain mois sera offert automatiquement." %}
+                                        </p>
+                                    {% endif %}
+                                {% elif subscription_status.free_month_used %}
+                                    <p class="small text-muted">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        {% trans "Vous avez déjà utilisé votre mois offert." %}
+                                    </p>
+                                {% endif %}
+                                
+                                {% if subscription_status.first_year_end_date %}
+                                    <p class="small text-muted mt-2">
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        {% trans "Offre valable jusqu'au :" %} {{ subscription_status.first_year_end_date|date:"d/m/Y" }}
+                                    </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-secondary">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>{% trans "Période promotionnelle terminée" %}</strong><br>
+                            {% trans "Votre première année est terminée. Plus de mois offert." %}
+                        </div>
+                    {% endif %}
+                    
+                {% elif subscription_type == 'pay_per_use' %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-coins me-2"></i>
+                        <strong>{% trans "Mode Pay-per-use" %}</strong><br>
+                        {% trans "Crédits disponibles :" %} <strong>{{ credits_balance }}</strong>
+                    </div>
+                {% endif %}
+                
+                <hr>
+                
+                <!-- Situation actuelle -->
+                <h5>{% trans "Votre situation" %}</h5>
+                <p>{% trans "Total chambres déclarées :" %} <strong>{{ total_rooms }}</strong></p>
+                <p>{% trans "Offre recommandée :" %} <strong class="text-primary">{{ recommended.message }}</strong></p>
+                
+                <hr>
+                
+                <!-- Changer de formule -->
+                <h5>{% trans "Changer de formule" %}</h5>
+                <div class="row mt-3">
+                    <div class="col-md-6 mb-2">
+                        <a href="{% url 'subscriptions:switch_to_pay_per_use' %}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-coins me-2"></i>{% trans "Passer en Pay-per-use" %}
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <a href="{% url 'subscriptions:switch_to_subscription' %}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-calendar-alt me-2"></i>{% trans "Passer en Abonnement" %}
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Activer l'abonnement -->
+                {% if subscription_type == 'subscription' and not subscription_active %}
+                    <hr>
+                    <form method="post" action="{% url 'subscriptions:subscribe' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            <i class="fas fa-credit-card me-2"></i>
+                            {% trans "Activer mon abonnement (1er mois gratuit)" %}
+                        </button>
+                    </form>
+                {% endif %}
+                
+                <!-- Acheter des crédits -->
+                {% if subscription_type == 'pay_per_use' %}
+                    <hr>
+                    <h5>{% trans "Acheter des crédits" %}</h5>
+                    <div class="row mt-3">
+                        {% for pack in credits_packs %}
+                            <div class="col-md-4 mb-2">
+                                <form method="post" action="{% url 'subscriptions:buy_credits' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="credits" value="{{ pack.credits }}">
+                                    <button type="submit" class="btn btn-outline-success w-100">
+                                        {{ pack.display }}
+                                    </button>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+            </div>
+        </div>
+        
+        <!-- Historique des paiements -->
+        <div class="card card-shadow border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>{% trans "Historique des paiements" %}</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted text-center">{% trans "Les paiements apparaîtront ici après votre première transaction." %}</p>
+            </div>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

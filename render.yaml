@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: loysecure
+    runtime: python3
+    repo: https://github.com/mamadoualiou1001-gif/loysecure
+    branch: main
+    region: frankfurt
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py migrate --noinput
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn loysecure.wsgi:application
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: PYTHON_VERSION
+        value: "3.10"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,loysecure.onrender.com"

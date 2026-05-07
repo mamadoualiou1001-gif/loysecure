@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card card-shadow border-0">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h3 class="mb-0"><i class="fas fa-user-plus me-2"></i>{% trans "Inscription" %}</h3>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-gift me-2"></i>
+                        <strong>{% trans "Offre de bienvenue" %}</strong><br>
+                        {% trans "1er mois GRATUIT pour tout nouvel inscrit !" %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 py-2">
+                        <i class="fas fa-user-plus me-2"></i>{% trans "Créer mon compte" %}
+                    </button>
+                </form>
+                <hr>
+                <p class="text-center mb-0">
+                    {% trans "Déjà un compte ?" %}
+                    <a href="{% url 'accounts:login' %}">{% trans "Connectez-vous" %}</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card card-shadow border-0">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h3 class="mb-0"><i class="fas fa-building me-2"></i>{% trans "Déclaration des logements" %}</h3>
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>{% trans "Déclaration obligatoire" %}</strong><br>
+                    {% trans "Déclarez tous vos logements et le nombre exact de chambres. Cette déclaration détermine votre tarif." %}
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    {{ formset.management_form }}
+                    
+                    <div id="forms-container">
+                        {% for form in formset %}
+                            <div class="card mb-3 property-form">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="mb-0">{% trans "Logement" %} {{ forloop.counter }}</h5>
+                                        {% if form.DELETE %}
+                                            <button type="button" class="btn btn-sm btn-danger remove-form">
+                                                <i class="fas fa-trash"></i> {% trans "Supprimer" %}
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                    {{ form|crispy }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <button type="button" class="btn btn-secondary" id="add-form">
+                        <i class="fas fa-plus me-2"></i>{% trans "Ajouter un logement" %}
+                    </button>
+                    
+                    <hr>
+                    
+                    <div class="alert alert-light">
+                        <h5><i class="fas fa-chart-line me-2"></i>{% trans "Récapitulatif" %}</h5>
+                        <p><strong>{% trans "Nombre de logements :" %}</strong> <span id="property-count">0</span></p>
+                        <p><strong>{% trans "Total chambres :" %}</strong> <span id="total-rooms">0</span></p>
+                        <p><strong>{% trans "Tarif estimé :" %}</strong> <span id="estimated-price" class="fw-bold text-primary"></span></p>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="declaration-honor" required>
+                        <label class="form-check-label" for="declaration-honor">
+                            <strong>{% trans "Je déclare sur l'honneur que les informations fournies sont exactes et complètes." %}</strong>
+                            <br>
+                            <small class="text-muted">{% trans "Toute fausse déclaration entraînera la suspension de votre compte." %}</small>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100 py-2">
+                        <i class="fas fa-check-circle me-2"></i>{% trans "Valider ma déclaration" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateTotals() {
+        let totalRooms = 0;
+        let propertyCount = 0;
+        
+        document.querySelectorAll('.property-form input[name$="number_of_rooms"]').forEach(input => {
+            if (input.value && parseInt(input.value) > 0) {
+                totalRooms += parseInt(input.value);
+                propertyCount++;
+            }
+        });
+        
+        document.getElementById('property-count').textContent = propertyCount;
+        document.getElementById('total-rooms').textContent = totalRooms;
+        
+        let price = 0;
+        if (totalRooms <= 10) {
+            price = 1000;
+        } else if (totalRooms <= 20) {
+            price = 1500;
+        } else {
+            price = 2000;
+        }
+        
+        let payPerUse = totalRooms * 100;
+        let message = `Abonnement : ${price} FCFA/mois | Pay-per-use : ${payPerUse} FCFA/mois`;
+        
+        if (totalRooms > 0) {
+            if (payPerUse <= price) {
+                message += ` (💰 économique : Pay-per-use)`;
+            } else {
+                message += ` (💰 économique : Abonnement)`;
+            }
+        }
+        
+        document.getElementById('estimated-price').textContent = message;
+    }
+    
+    // Ajouter un formulaire
+    const addButton = document.getElementById('add-form');
+    const container = document.getElementById('forms-container');
+    const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+    
+    addButton.addEventListener('click', () => {
+        const currentForms = parseInt(totalForms.value);
+        const newForm = document.querySelector('.property-form').cloneNode(true);
+        
+        newForm.innerHTML = newForm.innerHTML.replace(/form-\d+-/g, `form-${currentForms}-`);
+        newForm.querySelectorAll('input, textarea').forEach(input => {
+            input.value = '';
+        });
+        
+        container.appendChild(newForm);
+        totalForms.value = currentForms + 1;
+        
+        attachEvents();
+        updateTotals();
+    });
+    
+    // Supprimer un formulaire
+    function attachEvents() {
+        document.querySelectorAll('.remove-form').forEach(btn => {
+            btn.onclick = function() {
+                this.closest('.property-form').remove();
+                updateTotals();
+            };
+        });
+        
+        document.querySelectorAll('.property-form input[name$="number_of_rooms"]').forEach(input => {
+            input.addEventListener('change', updateTotals);
+        });
+    }
+    
+    attachEvents();
+    updateTotals();
+</script>
+{% endblock %}
