@@ -53,37 +53,45 @@ class ReceiptPDFGenerator:
         
         styles = getSampleStyleSheet()
         
+        # Couleur bleue LOYSECURE
+        LS_BLUE = colors.HexColor('#0b2e83')
+        LS_LIGHT_BLUE = colors.HexColor('#f0f4fa')
+        
         # Styles
         title_style = ParagraphStyle(
             'Title',
             parent=styles['Heading1'],
-            fontSize=22,
+            fontSize=56,
             alignment=TA_CENTER,
-            textColor=colors.white,
+            spaceAfter=5,
+            textColor=LS_BLUE,
+            fontName='Helvetica-Bold',
         )
         
         subtitle_style = ParagraphStyle(
             'Subtitle',
-            parent=styles['Normal'],
-            fontSize=10,
+            parent=styles['Heading2'],
+            fontSize=28,
             alignment=TA_CENTER,
-            textColor=colors.white,
+            spaceAfter=20,
+            textColor=LS_BLUE,
+            fontName='Helvetica-Bold',
         )
         
-        section_style = ParagraphStyle(
-            'Section',
+        section_title_style = ParagraphStyle(
+            'SectionTitle',
             parent=styles['Heading3'],
-            fontSize=11,
-            spaceBefore=8,
-            spaceAfter=4,
-            textColor=colors.HexColor('#1e3a5f'),
+            fontSize=24,
+            alignment=TA_LEFT,
+            textColor=colors.white,
+            fontName='Helvetica-Bold',
         )
         
         normal_style = ParagraphStyle(
             'Normal',
             parent=styles['Normal'],
-            fontSize=9,
-            leading=13,
+            fontSize=18,
+            leading=28,
         )
         
         bold_style = ParagraphStyle(
@@ -92,126 +100,169 @@ class ReceiptPDFGenerator:
             fontName='Helvetica-Bold',
         )
         
-        # Liste des éléments
+        small_style = ParagraphStyle(
+            'Small',
+            parent=styles['Normal'],
+            fontSize=14,
+            leading=20,
+        )
+        
         elements = []
         
         # ========== EN-TÊTE ==========
-        header_elements = []
-        header_elements.append(Paragraph("LOYSECURE", title_style))
-        header_elements.append(Spacer(1, 2))
-        header_elements.append(Paragraph("Quittance de loyer certifiée", subtitle_style))
+        elements.append(Paragraph("LOYSECURE", title_style))
+        elements.append(Paragraph("QUITTANCE DE LOYER", subtitle_style))
         
-        header_table = Table([header_elements], colWidths=[450])
-        header_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#DAA520')),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('PADDING', (0, 0), (-1, -1), 12),
-        ]))
-        elements.append(header_table)
-        elements.append(Spacer(1, 10))
-        
-        # ========== INFORMATIONS ==========
+        # ========== INFORMATIONS GÉNÉRALES (encadré) ==========
         period_bilingual = get_month_bilingual(self.receipt.month)
         
         info_data = [
-            [f"N° Quittance : {str(self.receipt.id)[:8].upper()}", f"Date : {timezone.localtime(self.receipt.certified_at).strftime('%d/%m/%Y')}"],
-            [f"Période : {period_bilingual}", f"Heure : {timezone.localtime(self.receipt.certified_at).strftime('%H:%M')}"],
+            [
+                f"<b>N° Quittance :</b> {str(self.receipt.id)[:8].upper()}<br/><b>Période :</b> {period_bilingual}",
+                f"<b>Date :</b> {timezone.localtime(self.receipt.certified_at).strftime('%d/%m/%Y')}<br/><b>Heure :</b> {timezone.localtime(self.receipt.certified_at).strftime('%H:%M')}"
+            ],
         ]
         
-        info_table = Table(info_data, colWidths=[220, 230])
+        info_table = Table(info_data, colWidths=[225, 225])
         info_table.setStyle(TableStyle([
-            ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#1e3a5f')),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8f9fa')),
-            ('PADDING', (0, 0), (-1, -1), 8),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BOX', (0, 0), (-1, -1), 2, LS_BLUE),
+            ('ROUNDEDCORNERS', (0, 0), (-1, -1), 10),
+            ('PADDING', (0, 0), (-1, -1), 20),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTSIZE', (0, 0), (-1, -1), 18),
         ]))
         elements.append(info_table)
-        elements.append(Spacer(1, 10))
+        elements.append(Spacer(1, 15))
         
-        # ========== PARTIES ==========
-        elements.append(Paragraph("PARTIES PRENANTES", section_style))
+        # ========== SECTION PARTIES PRENANTES ==========
+        # Titre de section (fond bleu)
+        parties_title = Table([["PARTIES PRENANTES"]], colWidths=[450])
+        parties_title.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), LS_BLUE),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('PADDING', (0, 0), (-1, -1), 12),
+            ('FONTSIZE', (0, 0), (-1, -1), 22),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ]))
+        elements.append(parties_title)
         
+        # Contenu deux colonnes
         parties_data = [
-            ['BAILLEUR (PROPRIETAIRE)', 'PRENANT (LOCATAIRE)'],
-            [self.owner.get_full_name() or self.owner.username, self.tenant.name],
-            [f"Tel : {self.owner.phone}", f"Tel : {self.tenant.phone}"],
-            [f"Email : {self.owner.email or '-'}", f"Email : {self.tenant.email or '-'}"],
+            [
+                f"<b>BAILLEUR (PROPRIETAIRE)</b><br/><br/>{self.owner.get_full_name() or self.owner.username}<br/>Tel : {self.owner.phone}",
+                f"<b>PRENANT (LOCATAIRE)</b><br/><br/>{self.tenant.name}<br/>Tel : {self.tenant.phone}"
+            ],
         ]
         
-        parties_table = Table(parties_data, colWidths=[220, 230])
+        parties_table = Table(parties_data, colWidths=[225, 225])
         parties_table.setStyle(TableStyle([
-            ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#1e3a5f')),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
-            ('BACKGROUND', (0, 0), (1, 0), colors.HexColor('#1e3a5f')),
-            ('TEXTCOLOR', (0, 0), (1, 0), colors.white),
-            ('PADDING', (0, 0), (-1, -1), 8),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BOX', (0, 0), (-1, -1), 2, LS_BLUE),
+            ('ROUNDEDCORNERS', (0, 0), (-1, -1), 10),
+            ('PADDING', (0, 0), (-1, -1), 20),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('FONTSIZE', (0, 0), (-1, -1), 18),
         ]))
         elements.append(parties_table)
-        elements.append(Spacer(1, 10))
+        elements.append(Spacer(1, 15))
         
-        # ========== LOGEMENT ==========
-        elements.append(Paragraph("LOGEMENT CONCERNE", section_style))
+        # ========== SECTION LOGEMENT ==========
+        logement_title = Table([["LOGEMENT CONCERNE"]], colWidths=[450])
+        logement_title.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), LS_BLUE),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('PADDING', (0, 0), (-1, -1), 12),
+            ('FONTSIZE', (0, 0), (-1, -1), 22),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ]))
+        elements.append(logement_title)
         
-        property_data = [
-            [f"Adresse : {self.property.address}"],
-            [f"Nombre de chambres : {self.property.number_of_rooms}"],
+        logement_data = [
+            [f"<b>Adresse :</b> {self.property.address}<br/><b>Nombre de chambres :</b> {self.property.number_of_rooms}"],
         ]
         
-        property_table = Table(property_data, colWidths=[450])
-        property_table.setStyle(TableStyle([
-            ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#1e3a5f')),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#fafafa')),
-            ('PADDING', (0, 0), (-1, -1), 8),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
+        logement_table = Table(logement_data, colWidths=[450])
+        logement_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 2, LS_BLUE),
+            ('ROUNDEDCORNERS', (0, 0), (-1, -1), 10),
+            ('PADDING', (0, 0), (-1, -1), 20),
+            ('FONTSIZE', (0, 0), (-1, -1), 18),
         ]))
-        elements.append(property_table)
-        elements.append(Spacer(1, 10))
+        elements.append(logement_table)
+        elements.append(Spacer(1, 15))
         
-        # ========== PAIEMENT ==========
-        elements.append(Paragraph("DETAILS DU PAIEMENT", section_style))
+        # ========== SECTION PAIEMENT ==========
+        paiement_title = Table([["DETAILS DU PAIEMENT"]], colWidths=[450])
+        paiement_title.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), LS_BLUE),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('PADDING', (0, 0), (-1, -1), 12),
+            ('FONTSIZE', (0, 0), (-1, -1), 22),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ]))
+        elements.append(paiement_title)
         
         payment_method_label = dict(self.receipt.PAYMENT_METHOD_CHOICES).get(self.receipt.payment_method, '-')
         
-        payment_data = [
-            [f"Mode de paiement : {payment_method_label}"],
-            [f"Montant : {self.receipt.amount:,.0f} {self.owner.get_currency_symbol()}"],
+        paiement_data = [
+            [f"<b>Mode de paiement :</b> {payment_method_label}<br/><b>Montant :</b> <font color='#0b2e83' size='22'><b>{self.receipt.amount:,.0f} {self.owner.get_currency_symbol()}</b></font>"],
         ]
         
-        payment_table = Table(payment_data, colWidths=[450])
-        payment_table.setStyle(TableStyle([
-            ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#1e3a5f')),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#fafafa')),
-            ('PADDING', (0, 0), (-1, -1), 8),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
+        paiement_table = Table(paiement_data, colWidths=[450])
+        paiement_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 2, LS_BLUE),
+            ('ROUNDEDCORNERS', (0, 0), (-1, -1), 10),
+            ('PADDING', (0, 0), (-1, -1), 20),
+            ('FONTSIZE', (0, 0), (-1, -1), 18),
         ]))
-        elements.append(payment_table)
-        elements.append(Spacer(1, 10))
+        elements.append(paiement_table)
+        elements.append(Spacer(1, 15))
         
-        # ========== MONTANT EN LETTRES ==========
-        elements.append(Paragraph(f"Arrêté la présente quittance à la somme de : {self.receipt.amount:,.0f} {self.owner.get_currency_symbol()}", bold_style))
+        # ========== TOTAL ==========
+        total_data = [
+            [f"<b>Arrêté la présente quittance à la somme de :</b> <font color='#0b2e83' size='24'><b>{self.receipt.amount:,.0f} {self.owner.get_currency_symbol()}</b></font>"],
+        ]
+        
+        total_table = Table(total_data, colWidths=[450])
+        total_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 2, LS_BLUE),
+            ('ROUNDEDCORNERS', (0, 0), (-1, -1), 10),
+            ('PADDING', (0, 0), (-1, -1), 20),
+            ('FONTSIZE', (0, 0), (-1, -1), 20),
+        ]))
+        elements.append(total_table)
         elements.append(Spacer(1, 15))
         
         # ========== SIGNATURE ==========
         signature_data = [
-            ["Cachet et signature du bailleur :", f"Date : {timezone.localtime(self.receipt.certified_at).strftime('%d/%m/%Y')}"],
-            ["_________________________", ""],
+            [
+                f"<b>Cachet et signature du bailleur</b><br/><br/>_________________________",
+                f"<b>Date :</b> {timezone.localtime(self.receipt.certified_at).strftime('%d/%m/%Y')}"
+            ],
         ]
         
         signature_table = Table(signature_data, colWidths=[280, 170])
         signature_table.setStyle(TableStyle([
-            ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
-            ('PADDING', (0, 0), (-1, -1), 5),
+            ('BOX', (0, 0), (-1, -1), 2, LS_BLUE),
+            ('ROUNDEDCORNERS', (0, 0), (-1, -1), 10),
+            ('PADDING', (0, 0), (-1, -1), 20),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTSIZE', (0, 0), (-1, -1), 18),
         ]))
         elements.append(signature_table)
         elements.append(Spacer(1, 15))
         
         # ========== QR CODE ==========
+        qr_title = Table([["QR CODE DE VERIFICATION"]], colWidths=[450])
+        qr_title.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), LS_BLUE),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('PADDING', (0, 0), (-1, -1), 12),
+            ('FONTSIZE', (0, 0), (-1, -1), 22),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ]))
+        elements.append(qr_title)
+        
+        # Génération du QR code
         verification_url = f"https://loysecure-1.onrender.com/verify/{self.receipt.id}"
         qr = qrcode.make(verification_url)
         qr_path = os.path.join(settings.MEDIA_ROOT, f"temp_qr_{self.receipt.id}.png")
@@ -219,27 +270,42 @@ class ReceiptPDFGenerator:
         
         from reportlab.platypus import Image
         
-        elements.append(Paragraph("QR CODE DE VERIFICATION", section_style))
-        elements.append(Spacer(1, 5))
-        elements.append(Image(qr_path, width=80, height=80, hAlign='CENTER'))
-        elements.append(Spacer(1, 5))
-        elements.append(Paragraph("Scannez ce code pour vérifier l'authenticité", normal_style))
+        qr_content = []
+        qr_content.append(Spacer(1, 10))
+        qr_content.append(Image(qr_path, width=100, height=100, hAlign='CENTER'))
+        qr_content.append(Spacer(1, 10))
+        qr_content.append(Paragraph("Scannez ce code pour vérifier l'authenticité", small_style))
+        
+        qr_table = Table([[qr_content]], colWidths=[450])
+        qr_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 2, LS_BLUE),
+            ('ROUNDEDCORNERS', (0, 0), (-1, -1), 10),
+            ('PADDING', (0, 0), (-1, -1), 20),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ]))
+        elements.append(qr_table)
+        elements.append(Spacer(1, 15))
         
         # ========== PIED DE PAGE ==========
-        elements.append(Spacer(1, 20))
-        footer = Paragraph(
-            "Document certifié électroniquement via LOYSECURE - Votre loyer, votre preuve.",
-            ParagraphStyle('Footer', parent=normal_style, fontSize=8, textColor=colors.HexColor('#888888'), alignment=TA_CENTER)
+        footer_style = ParagraphStyle(
+            'Footer',
+            parent=styles['Normal'],
+            fontSize=16,
+            textColor=LS_BLUE,
+            alignment=TA_CENTER,
+            fontName='Helvetica-Bold',
         )
-        elements.append(footer)
+        elements.append(Paragraph("Document certifié électroniquement via LOYSECURE - Votre loyer, votre preuve.", footer_style))
         
         # ========== BORDURE GÉNÉRALE ==========
         main_frame = Table([elements], colWidths=[480])
         main_frame.setStyle(TableStyle([
-            ('BOX', (0, 0), (-1, -1), 1.5, colors.HexColor('#1e3a5f')),
-            ('PADDING', (0, 0), (-1, -1), 12),
+            ('BOX', (0, 0), (-1, -1), 3, LS_BLUE),
+            ('ROUNDEDCORNERS', (0, 0), (-1, -1), 20),
+            ('PADDING', (0, 0), (-1, -1), 15),
         ]))
         
+        # Construction finale
         doc.build([main_frame])
         
         # Nettoyer
