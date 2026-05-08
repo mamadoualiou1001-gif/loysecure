@@ -11,7 +11,7 @@ from django.utils import timezone
 import os
 
 class ReceiptPDFGenerator:
-    """Générateur de quittances PDF professionnelles LOYSECURE avec bordure"""
+    """Générateur de quittances PDF professionnelles LOYSECURE"""
     
     def __init__(self, receipt):
         self.receipt = receipt
@@ -22,7 +22,6 @@ class ReceiptPDFGenerator:
     def generate(self):
         buffer = io.BytesIO()
         
-        # Document avec marges pour la bordure
         doc = SimpleDocTemplate(
             buffer,
             pagesize=A4,
@@ -38,7 +37,7 @@ class ReceiptPDFGenerator:
         title_style = ParagraphStyle(
             'Title',
             parent=styles['Heading1'],
-            fontSize=24,
+            fontSize=22,
             alignment=TA_CENTER,
             spaceAfter=5,
             textColor=colors.HexColor('#1e3a5f'),
@@ -56,7 +55,7 @@ class ReceiptPDFGenerator:
         section_style = ParagraphStyle(
             'Section',
             parent=styles['Heading3'],
-            fontSize=12,
+            fontSize=11,
             spaceBefore=12,
             spaceAfter=6,
             textColor=colors.HexColor('#1e3a5f'),
@@ -67,6 +66,14 @@ class ReceiptPDFGenerator:
             parent=styles['Normal'],
             fontSize=9,
             leading=13,
+        )
+        
+        bold_style = ParagraphStyle(
+            'Bold',
+            parent=styles['Normal'],
+            fontSize=9,
+            leading=13,
+            fontName='Helvetica-Bold',
         )
         
         # Contenu principal
@@ -84,15 +91,15 @@ class ReceiptPDFGenerator:
         content.append(line_table)
         content.append(Spacer(1, 10))
         
-        # ========== INFORMATIONS GÉNÉRALES ==========
+        # ========== INFORMATIONS GÉNÉRALES (sans balises HTML) ==========
         info_data = [
             [
-                f"<b>N° Quittance :</b> {str(self.receipt.id)[:8].upper()}",
-                f"<b>Date :</b> {timezone.localtime(self.receipt.certified_at).strftime('%d/%m/%Y')}"
+                f"N° Quittance : {str(self.receipt.id)[:8].upper()}",
+                f"Date : {timezone.localtime(self.receipt.certified_at).strftime('%d/%m/%Y')}"
             ],
             [
-                f"<b>Période :</b> {self.receipt.month.strftime('%B %Y')}",
-                f"<b>Heure :</b> {timezone.localtime(self.receipt.certified_at).strftime('%H:%M')}"
+                f"Période : {self.receipt.month.strftime('%B %Y')}",
+                f"Heure : {timezone.localtime(self.receipt.certified_at).strftime('%H:%M')}"
             ],
         ]
         
@@ -103,6 +110,7 @@ class ReceiptPDFGenerator:
             ('PADDING', (0, 0), (-1, -1), 8),
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8f9fa')),
             ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
         ]))
         content.append(info_table)
         content.append(Spacer(1, 12))
@@ -134,11 +142,11 @@ class ReceiptPDFGenerator:
         content.append(Paragraph("LOGEMENT CONCERNE", section_style))
         
         property_data = [
-            [f"• <b>Adresse :</b> {self.property.address}"],
-            [f"• <b>Nombre de chambres :</b> {self.property.number_of_rooms}"],
+            [f"• Adresse : {self.property.address}"],
+            [f"• Nombre de chambres : {self.property.number_of_rooms}"],
         ]
         if self.property.description:
-            property_data.append([f"• <b>Description :</b> {self.property.description}"])
+            property_data.append([f"• Description : {self.property.description}"])
         
         property_table = Table(property_data, colWidths=[450])
         property_table.setStyle(TableStyle([
@@ -154,9 +162,12 @@ class ReceiptPDFGenerator:
         # ========== DÉTAILS PAIEMENT ==========
         content.append(Paragraph("DETAILS DU PAIEMENT", section_style))
         
+        # Récupérer le libellé du mode de paiement
+        payment_method_label = dict(self.receipt.PAYMENT_METHOD_CHOICES).get(self.receipt.payment_method, '-')
+        
         payment_data = [
-            [f"• <b>Mode de paiement :</b> {dict(self.receipt.PAYMENT_METHOD_CHOICES).get(self.receipt.payment_method, '-')}"],
-            [f"• <b>Montant :</b> {self.receipt.amount:,.0f} {self.owner.get_currency_symbol()}"],
+            [f"• Mode de paiement : {payment_method_label}"],
+            [f"• Montant : {self.receipt.amount:,.0f} {self.owner.get_currency_symbol()}"],
         ]
         
         payment_table = Table(payment_data, colWidths=[450])
@@ -171,13 +182,13 @@ class ReceiptPDFGenerator:
         content.append(Spacer(1, 12))
         
         # ========== MONTANT EN LETTRES ==========
-        amount_words = f"<b>Arrêté la présente quittance à la somme de :</b> {self.receipt.amount:,.0f} {self.owner.get_currency_symbol()}"
-        content.append(Paragraph(amount_words, normal_style))
+        amount_text = f"Arrêté la présente quittance à la somme de : {self.receipt.amount:,.0f} {self.owner.get_currency_symbol()}"
+        content.append(Paragraph(amount_text, bold_style))
         content.append(Spacer(1, 15))
         
         # ========== SIGNATURE ==========
         signature_data = [
-            [f"<b>Cachet et signature du bailleur :</b>", f"<b>Date :</b> {timezone.localtime(self.receipt.certified_at).strftime('%d/%m/%Y')}"],
+            ["Cachet et signature du bailleur :", f"Date : {timezone.localtime(self.receipt.certified_at).strftime('%d/%m/%Y')}"],
             ["_________________________", ""],
         ]
         
@@ -186,7 +197,6 @@ class ReceiptPDFGenerator:
             ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
             ('FONTSIZE', (0, 0), (-1, -1), 9),
             ('PADDING', (0, 0), (-1, -1), 5),
-            ('LINEBELOW', (0, 1), (0, 1), 1, colors.black),
         ]))
         content.append(signature_table)
         content.append(Spacer(1, 15))
@@ -204,7 +214,7 @@ class ReceiptPDFGenerator:
         qr_section.append(Spacer(1, 5))
         qr_section.append(Image(qr_path, width=80, height=80, hAlign='CENTER'))
         qr_section.append(Spacer(1, 5))
-        qr_section.append(Paragraph("Scannez ce code pour vérifier l'authenticité", normal_style))
+        qr_section.append(Paragraph("Scannez ce code pour vérifier l'identite", normal_style))
         
         qr_table = Table([[qr_section]], colWidths=[450])
         qr_table.setStyle(TableStyle([
@@ -217,22 +227,20 @@ class ReceiptPDFGenerator:
         # ========== PIED DE PAGE ==========
         content.append(Spacer(1, 20))
         footer_text = """
-        <i>Document certifié électroniquement via LOYSECURE – Votre loyer, votre preuve.</i><br/>
-        <i>Cette quittance a valeur de preuve conformément à la législation en vigueur.</i><br/>
-        <i>Toute modification est interdite.</i>
+        Document certifié électroniquement via LOYSECURE - Votre loyer, votre preuve.
+        Cette quittance a valeur de preuve conformément à la législation en vigueur.
+        Toute modification est interdite.
         """
         footer_style = ParagraphStyle('Footer', parent=normal_style, fontSize=8, textColor=colors.HexColor('#888888'), alignment=TA_CENTER)
         content.append(Paragraph(footer_text, footer_style))
         
         # ========== BORDURE GÉNÉRALE ==========
-        # On encadre TOUT le contenu
         main_frame = Table([[content]], colWidths=[480])
         main_frame.setStyle(TableStyle([
-            ('BOX', (0, 0), (-1, -1), 2, colors.HexColor('#1e3a5f')),  # Bordure bleue épaisse
+            ('BOX', (0, 0), (-1, -1), 1.5, colors.HexColor('#1e3a5f')),
             ('PADDING', (0, 0), (-1, -1), 12),
         ]))
         
-        # Générer le document
         doc.build([main_frame])
         
         # Nettoyer
