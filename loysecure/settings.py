@@ -144,3 +144,17 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# ========== EMAIL CONFIGURATION ==========
+# Pour le développement (affiche les emails dans la console)
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    # En production, utilise un vrai serveur SMTP
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'  # ou autre
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = 'ton_email@gmail.com'
+    EMAIL_HOST_PASSWORD = 'ton_mot_de_passe'
+    DEFAULT_FROM_EMAIL = 'LoySecure <noreply@loysecure.com>'

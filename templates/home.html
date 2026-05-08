@@ -2,41 +2,41 @@
 {% load i18n %}
 
 {% block content %}
-<div class="row align-items-center min-vh-75">
+<!-- Hero section -->
+<div class="row align-items-center min-vh-75 py-5">
     <div class="col-md-6">
-        <div class="badge bg-warning text-dark mb-3">
+        <div class="badge bg-warning text-dark mb-3 px-3 py-2 rounded-pill">
             <i class="fas fa-star me-1"></i> {% trans "Leader de la quittance numérique en Afrique" %}
         </div>
-        <h1 class="display-4 fw-bold">
+        <h1 class="display-4 fw-bold mb-4">
             {% trans "Sécurisez vos quittances" %}<br>
             <span class="text-primary">{% trans "en 2 clics" %}</span>
         </h1>
-        <p class="lead mt-4">
+        <p class="lead text-muted mb-4">
             {% trans "LoySecure génère des quittances certifiées, les envoie par WhatsApp et les stocke pour toujours. Plus de litiges, plus de quittances perdues." %}
         </p>
-        <div class="mt-4">
-            <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg me-3">
-                <i class="fas fa-user-plus"></i> {% trans "Commencer gratuitement" %}
+        <div class="d-flex flex-wrap gap-3 mb-4">
+            <a href="{% url 'accounts:register' %}" class="btn btn-success btn-lg px-4">
+                <i class="fas fa-user-plus me-2"></i> {% trans "Commencer gratuitement" %}
             </a>
-            <a href="#pricing" class="btn btn-outline-secondary btn-lg">
-                <i class="fas fa-tags"></i> {% trans "Voir les tarifs" %}
+            <a href="#pricing" class="btn btn-outline-primary btn-lg px-4">
+                <i class="fas fa-tags me-2"></i> {% trans "Voir les tarifs" %}
             </a>
         </div>
-        <div class="mt-4">
-            <div class="d-flex gap-4">
-                <div><i class="fas fa-check-circle text-success"></i> {% trans "1er mois gratuit" %}</div>
-                <div><i class="fas fa-check-circle text-success"></i> {% trans "1 mois offert après 5 mois payés" %}</div>
-                <div><i class="fas fa-check-circle text-success"></i> {% trans "Support WhatsApp" %}</div>
-            </div>
+        <div class="d-flex flex-wrap gap-4 text-muted">
+            <div><i class="fas fa-check-circle text-success me-1"></i> {% trans "1er mois gratuit" %}</div>
+            <div><i class="fas fa-check-circle text-success me-1"></i> {% trans "1 mois offert après 5 mois payés" %}</div>
+            <div><i class="fas fa-check-circle text-success me-1"></i> {% trans "Support WhatsApp" %}</div>
         </div>
     </div>
     <div class="col-md-6 text-center">
-        <div class="bg-light p-5 rounded-circle d-inline-block">
+        <div class="bg-light rounded-4 p-5 d-inline-block shadow-sm">
             <i class="fas fa-file-invoice-dollar fa-6x text-primary"></i>
         </div>
     </div>
 </div>
 
+<!-- Section tarifs -->
 <div id="pricing" class="row mt-5 pt-5">
     <div class="col-12 text-center mb-5">
         <h2 class="fw-bold">{% trans "Tarifs simples et transparents" %}</h2>
@@ -44,62 +44,58 @@
     </div>
     
     <div class="col-md-4 mb-4">
-        <div class="card card-shadow border-0 h-100 text-center">
+        <div class="card h-100 text-center border-0 shadow-sm">
             <div class="card-body p-4">
-                <i class="fas fa-home fa-2x text-primary mb-3"></i>
-                <h3 class="card-title">{% trans "Petit propriétaire" %}</h3>
-                <h2 class="display-4 fw-bold">1 000 <small class="text-muted">FCFA/mois</small></h2>
+                <i class="fas fa-home fa-3x text-primary mb-3"></i>
+                <h3>{% trans "Petit propriétaire" %}</h3>
+                <h2 class="display-4 fw-bold text-primary">1 000 <small class="text-muted fs-6">FCFA/mois</small></h2>
                 <p class="text-muted">{% trans "Jusqu'à 10 chambres" %}</p>
                 <hr>
                 <ul class="list-unstyled text-start">
                     <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "Quittances illimitées" %}</li>
-                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "Envoi WhatsApp automatique" %}</li>
-                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "Stockage cloud à vie" %}</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "Envoi WhatsApp" %}</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "Stockage cloud" %}</li>
                 </ul>
-                <a href="{% url 'accounts:register' %}" class="btn btn-outline-primary w-100 mt-3">
-                    {% trans "Choisir" %}
-                </a>
+                <a href="{% url 'accounts:register' %}" class="btn btn-outline-primary w-100 mt-3">{% trans "Choisir" %}</a>
             </div>
         </div>
     </div>
     
     <div class="col-md-4 mb-4">
-        <div class="card card-shadow border-0 h-100 text-center border-top border-primary border-4">
+        <div class="card h-100 text-center border-primary border-2 shadow">
+            <div class="card-header bg-white border-0 pt-4">
+                <span class="badge bg-primary px-3 py-2 rounded-pill">{% trans "Populaire" %}</span>
+            </div>
             <div class="card-body p-4">
-                <i class="fas fa-building fa-2x text-primary mb-3"></i>
-                <span class="badge bg-primary ms-2">{% trans "Populaire" %}</span>
-                <h3 class="card-title">{% trans "Propriétaire moyen" %}</h3>
-                <h2 class="display-4 fw-bold">1 500 <small class="text-muted">FCFA/mois</small></h2>
+                <i class="fas fa-building fa-3x text-primary mb-3"></i>
+                <h3>{% trans "Propriétaire moyen" %}</h3>
+                <h2 class="display-4 fw-bold text-primary">1 500 <small class="text-muted fs-6">FCFA/mois</small></h2>
                 <p class="text-muted">{% trans "11 à 20 chambres" %}</p>
                 <hr>
                 <ul class="list-unstyled text-start">
                     <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "Tout du pack Petit" %}</li>
-                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "Export comptable CSV" %}</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "Export CSV" %}</li>
                     <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "Rapports mensuels" %}</li>
                 </ul>
-                <a href="{% url 'accounts:register' %}" class="btn btn-primary w-100 mt-3">
-                    {% trans "Choisir" %}
-                </a>
+                <a href="{% url 'accounts:register' %}" class="btn btn-primary w-100 mt-3">{% trans "Choisir" %}</a>
             </div>
         </div>
     </div>
     
     <div class="col-md-4 mb-4">
-        <div class="card card-shadow border-0 h-100 text-center">
+        <div class="card h-100 text-center border-0 shadow-sm">
             <div class="card-body p-4">
-                <i class="fas fa-city fa-2x text-primary mb-3"></i>
-                <h3 class="card-title">{% trans "Grand propriétaire" %}</h3>
-                <h2 class="display-4 fw-bold">2 000 <small class="text-muted">FCFA/mois</small></h2>
+                <i class="fas fa-city fa-3x text-primary mb-3"></i>
+                <h3>{% trans "Grand propriétaire" %}</h3>
+                <h2 class="display-4 fw-bold text-primary">2 000 <small class="text-muted fs-6">FCFA/mois</small></h2>
                 <p class="text-muted">{% trans "21+ chambres" %}</p>
                 <hr>
                 <ul class="list-unstyled text-start">
                     <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "Tout du pack Moyen" %}</li>
-                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "API d'intégration" %}</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "API intégration" %}</li>
                     <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "Support dédié" %}</li>
                 </ul>
-                <a href="{% url 'accounts:register' %}" class="btn btn-outline-primary w-100 mt-3">
-                    {% trans "Choisir" %}
-                </a>
+                <a href="{% url 'accounts:register' %}" class="btn btn-outline-primary w-100 mt-3">{% trans "Choisir" %}</a>
             </div>
         </div>
     </div>
@@ -116,33 +112,6 @@
             <a href="{% url 'accounts:register' %}" class="btn btn-warning btn-lg mt-3">
                 <i class="fas fa-gift me-2"></i> {% trans "Profiter de l'offre" %}
             </a>
-        </div>
-    </div>
-</div>
-
-<!-- Alternative Pay-per-use -->
-<div class="row mt-5">
-    <div class="col-12 text-center mb-4">
-        <h3 class="fw-bold">{% trans "Vous préférez payer à l'usage ?" %}</h3>
-        <p class="text-muted">{% trans "Notre formule Pay-per-use est faite pour vous" %}</p>
-    </div>
-    <div class="col-md-6 mx-auto">
-        <div class="card card-shadow border-0 text-center">
-            <div class="card-body p-4">
-                <i class="fas fa-coins fa-2x text-primary mb-3"></i>
-                <h3 class="card-title">{% trans "Pay-per-use" %}</h3>
-                <h2 class="display-4 fw-bold">100 <small class="text-muted">FCFA/chambre</small></h2>
-                <p class="text-muted">{% trans "Par quittance" %}</p>
-                <hr>
-                <ul class="list-unstyled text-start">
-                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "Sans engagement" %}</li>
-                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "1er mois offert (10 quittances)" %}</li>
-                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> {% trans "Achetez des packs de crédits" %}</li>
-                </ul>
-                <a href="{% url 'accounts:register' %}" class="btn btn-outline-primary w-100 mt-3">
-                    {% trans "Découvrir" %}
-                </a>
-            </div>
         </div>
     </div>
 </div>
